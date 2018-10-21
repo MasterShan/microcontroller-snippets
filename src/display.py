@@ -3,12 +3,14 @@ from microbit import *
 
 height = 1; # Range from 1-5
 
+# Accelerometer three rows display values
 acc_left  = ':00000:09900:00000:';
 acc_right = ':00000:00990:00000:';
 acc_up    = ':00900:00900:00000:';
 acc_down  = ':00000:00900:00900:';
 acc_none  = ':00000:00900:00000:';
 
+# Botton bar display values
 floor_bar = '00000';
     
 def get_gesture():
