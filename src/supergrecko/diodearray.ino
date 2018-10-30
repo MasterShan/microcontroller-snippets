@@ -2,19 +2,20 @@
  * Declare arrays containing the different pins
  * for LED's and switches
  */
-int led_pins[] = {3, 4, 5, 6, 7, 9};
-int switch_pins[] = {11};
+int led_pins[] = {2, 3, 4, 5, 6, 7};
+int switch_pins[] = {8, 9, 11};
 
-int buttonState = HIGH;
-int reading;
-int lastBounce = 0;
-int lastState = HIGH;
+int buttonState1 = HIGH, buttonState2 = HIGH, buttonState3 = HIGH;
+int reading1, reading2, reading3;
+int lastBounce1 = 0, lastBounce2 = 0, lastBounce3 = 0;
+int lastState1 = HIGH, lastState2 = HIGH, lastState3 = HIGH;
 
 int bounceDelay = 200;
 /**
  * Declare the binary DIODE array
  */
 int diodes[] = {1, 1, 1, 1};
+int empty[] = {0, 0, 0, 0};
 
 /**
  * Current system state
@@ -32,17 +33,13 @@ int counter = 0;
  * Iterate over each of the arrays and start the pinMode.
  */
 void setup() {
-  // put your setup code here, to run once:
-  //pinMode(led_pins[0], OUTPUT);
-  //pinMode(led_pins[1], OUTPUT);
-  pinMode(led_pins[2], OUTPUT);
-  pinMode(led_pins[3], OUTPUT);
-  pinMode(led_pins[4], OUTPUT);
-  pinMode(led_pins[5], OUTPUT);
+  for(int i = 0; i < 6; i++) {
+    pinMode(led_pins[i], OUTPUT);
+  }
 
-  pinMode(switch_pins[0], INPUT_PULLUP);
-  //pinMode(switch_pins[1], INPUT_PULLUP);
-  //pinMode(switch_pins[2], INPUT_PULLUP);
+  for(int i = 0; i < 3; i++) {
+    pinMode(switch_pins[i], INPUT_PULLUP);
+  }
 
   Serial.begin(9600);
 }
@@ -52,10 +49,10 @@ void setup() {
  */
 int display_array(int states[] = {})
 {
-  digitalWrite(led_pins[2], states[0]);
-  digitalWrite(led_pins[3], states[1]);
-  digitalWrite(led_pins[4], states[2]);
-  digitalWrite(led_pins[5], states[3]);
+  digitalWrite(led_pins[0], states[0]);
+  digitalWrite(led_pins[1], states[1]);
+  digitalWrite(led_pins[2], states[2]);
+  digitalWrite(led_pins[3], states[3]);
 }
 
 /**
@@ -64,6 +61,7 @@ int display_array(int states[] = {})
  */
 void reset()
 {
+  digitalWrite(led_pins[4], HIGH);
   counter = 0;
 }
 
@@ -73,24 +71,64 @@ void reset()
  */
 bool readState()
 {
+  
   return state;
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
 
-  reading = digitalRead(11);
-
-  if(reading == LOW && lastState == HIGH && millis() - lastBounce > bounceDelay) {
+  reading1 = digitalRead(switch_pins[0]);
+  reading2 = digitalRead(switch_pins[1]);
+  reading3 = digitalRead(switch_pins[2]);
+  
+  if(reading1 == LOW && lastState1 == HIGH && millis() - lastBounce1 > bounceDelay) {
     state = !state;
 
-    lastBounce = millis();
+    lastBounce1 = millis();
   }
 
-  lastState == reading;
+  if((reading2 == LOW && lastState2 == HIGH && millis() - lastBounce2 > bounceDelay) && (reading3 == LOW && lastState3 == HIGH && millis() - lastBounce3 > bounceDelay)) {
+    reset();
+    
+    lastBounce2 = millis();
+    lastBounce3 = millis();
+  }else if(reading2 == LOW && lastState2 == HIGH && millis() - lastBounce2 > bounceDelay) {
+    if(counter < 15 && state) {
+      counter ++;
+    }
+    digitalWrite(led_pins[4], LOW);
 
-  if(readState()) {
-    display_array(diodes);
+    lastBounce2 = millis();
+  }else if(reading3 == LOW && lastState3 == HIGH && millis() - lastBounce3 > bounceDelay) {
+    if(counter > 0 && state) {
+      counter--;
+    }
+    digitalWrite(led_pins[4], LOW);
+
+    lastBounce3 = millis();
   }
-  Serial.print(String(state, HEX) + "\n");
+  
+  lastState1 == reading1;
+  lastState2 == reading2;
+  lastState3 == reading3;
+
+  if(counter > 15) {
+    counter = 15;
+  }
+  if(counter < 0) {
+    counter = 0;
+  }
+
+  if(state) {
+    for(int i = 2; i < 6; i++) {
+      digitalWrite(i, bitRead(counter, i - 2));
+    }
+    digitalWrite(led_pins[5], HIGH);
+    Serial.print(String(counter, HEX) + "\n");
+  }else{
+    display_array(empty);
+    digitalWrite(led_pins[5], LOW);
+    counter = 0;
+  }
 }
